@@ -70,9 +70,7 @@ func handlePubSub(w http.ResponseWriter, r *http.Request) {
 	var d struct {
 		Subscription string `json:"subscription"`
 		Message      struct {
-			//Attributes map[string]string `json:"attributes"`
-			ResourceName     string `json:"resourceName"`
-			NotificationType string `json:"notificationType"`
+			Attributes map[string]string `json:"attributes"`
 		} `json:"message"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
@@ -80,7 +78,10 @@ func handlePubSub(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	notificationType := d.Message.Attributes["notificationType"]
+	resourceName := d.Message.Attributes["resourceName"]
+
 	fmt.Fprintf(w, "Subscription: %s\r\n", html.EscapeString(d.Subscription))
-	fmt.Fprintf(w, "ResourceName: %s\r\n", html.EscapeString(d.Message.ResourceName))
-	fmt.Fprintf(w, "NotificationType: %s\r\n", html.EscapeString(d.Message.NotificationType))
+	fmt.Fprintf(w, "ResourceName: %s\r\n", html.EscapeString(resourceName))
+	fmt.Fprintf(w, "NotificationType: %s\r\n", html.EscapeString(notificationType))
 }
