@@ -1,2 +1,6 @@
 .vscode/settings.json
 gcp-csp-pubsub-demo
+tf/.terraform.*
+tf/terraform.tfstate
+tf/.terraform/providers/registry.terraform.io/hashicorp/google/6.43.0/linux_amd64/LICENSE.txt
+tf/.terraform/providers/registry.terraform.io/hashicorp/google/6.43.0/linux_amd64/terraform-provider-google_v6.43.0_x5

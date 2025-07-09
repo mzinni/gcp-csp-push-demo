@@ -8,6 +8,7 @@
   packages = [
     # pkgs.go
     pkgs.go_1_23
+    pkgs.terraform
     # pkgs.python311
     # pkgs.python311Packages.pip
     # pkgs.nodejs_20
