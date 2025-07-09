@@ -18,13 +18,16 @@ steps:
   # Docker Build
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 
-           'us-central1-docker.pkg.dev/${PROJECT_ID}/gcp-csp-pubsub-demo/server', 
+           'us-central1-docker.pkg.dev/${PROJECT_ID}/gcp-csp-pubsub-demo/server:$COMMIT_SHA', 
            '.']
 
   # Docker Push
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 
-           'us-central1-docker.pkg.dev/${PROJECT_ID}/gcp-csp-pubsub-demo/server']
+           'us-central1-docker.pkg.dev/${PROJECT_ID}/gcp-csp-pubsub-demo/server:$COMMIT_SHA']
+
+images:
+  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/gcp-csp-pubsub-demo/server:$COMMIT_SHA'
 
 options:
   logging: CLOUD_LOGGING_ONLY
