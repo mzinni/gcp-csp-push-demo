@@ -16,7 +16,7 @@ package main
 
 import (
 	"net/http/httptest"
-	"os"
+	"strings"
 	"testing"
 )
 
@@ -38,13 +38,9 @@ func TestHandler(t *testing.T) {
 		},
 	}
 
-	originalName := os.Getenv("NAME")
-	defer os.Setenv("NAME", originalName)
-
 	for _, test := range tests {
-		os.Setenv("NAME", test.name)
-
-		req := httptest.NewRequest("GET", "/", nil)
+		reader := strings.NewReader(`{"name": "` + test.name + `"}`)
+		req := httptest.NewRequest("GET", "/", reader)
 		rr := httptest.NewRecorder()
 		handler(rr, req)
 

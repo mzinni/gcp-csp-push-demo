@@ -49,7 +49,17 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	name := os.Getenv("NAME")
+	defer r.Body.Close()
+
+	var d struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
+		fmt.Fprint(w, "message failed to decode!!\r\n")
+		return
+	}
+
+	name := d.Name
 	if name == "" {
 		name = "World"
 	}
