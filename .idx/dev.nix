@@ -8,8 +8,6 @@
   packages = [
     # pkgs.go
     pkgs.go_1_23
-    pkgs.docker 
-    pkgs.docker-buildx
     # pkgs.python311
     # pkgs.python311Packages.pip
     # pkgs.nodejs_20
