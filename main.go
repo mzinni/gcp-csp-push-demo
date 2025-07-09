@@ -32,6 +32,7 @@ import (
 func main() {
 	log.Print("starting server...")
 	http.HandleFunc("/", handler)
+	http.HandleFunc("/pubsub", handlePubSub)
 
 	// Determine port for HTTP service.
 	port := os.Getenv("PORT")
@@ -55,8 +56,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello %s!\n", name)
 }
 
-// helloHTTP is an HTTP Cloud Function with a request parameter.
-func helloHTTP(w http.ResponseWriter, r *http.Request) {
+// handlePubSub is an HTTP Cloud Function with a request parameter.
+func handlePubSub(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	c, err := support.NewCaseClient(ctx)
@@ -73,7 +74,7 @@ func helloHTTP(w http.ResponseWriter, r *http.Request) {
 		} `json:"message"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		fmt.Fprint(w, "Failed to decode JSON!!\r\n")
+		fmt.Fprint(w, "PubSub message failed to decode!!\r\n")
 		return
 	}
 
