@@ -24,8 +24,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	support "cloud.google.com/go/support/apiv2"
+	"google.golang.org/api/pubsub/v1"
 	//supportpb "cloud.google.com/go/support/apiv2/supportpb"
 )
 
@@ -33,6 +35,8 @@ func main() {
 	log.Print("starting server...")
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/pubsub", handlePubSub)
+	//http.HandleFunc("/listMessages", handleListMessages)
+	//http.HandleFunc("/listServiceNowMessages", handleListServiceNowMessages)
 
 	// Determine port for HTTP service.
 	port := os.Getenv("PORT")
@@ -66,6 +70,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello %s!\n", name)
 }
 
+// pushRequest represents the payload of a Pub/Sub push message.
+type pushRequest struct {
+	Message      pubsub.PubsubMessage `json:"message"`
+	Subscription string               `json:"subscription"`
+}
+
 // handlePubSub is an HTTP Cloud Function with a request parameter.
 func handlePubSub(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -77,21 +87,17 @@ func handlePubSub(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 
-	var d struct {
-		Subscription string `json:"subscription"`
-		Message      struct {
-			Attributes map[string]string `json:"attributes"`
-		} `json:"message"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
+	var pr pushRequest
+	if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
 		fmt.Fprint(w, "PubSub message failed to decode!!\r\n")
 		return
 	}
 
-	notificationType := d.Message.Attributes["notificationType"]
-	resourceName := d.Message.Attributes["resourceName"]
+	notificationType := pr.Message.Attributes["notificationType"]
+	resourceName := pr.Message.Attributes["resourceName"]
 
-	fmt.Fprintf(w, "Subscription: %s\r\n", html.EscapeString(d.Subscription))
+	fmt.Fprintf(w, "Received Msg ID: %s at timestamp: %s\r\n", pr.Message.MessageId, time.Now())
+	fmt.Fprintf(w, "Subscription: %s\r\n", html.EscapeString(pr.Subscription))
 	fmt.Fprintf(w, "ResourceName: %s\r\n", html.EscapeString(resourceName))
 	fmt.Fprintf(w, "NotificationType: %s\r\n", html.EscapeString(notificationType))
 }
