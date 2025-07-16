@@ -96,7 +96,7 @@ func handlePubSub(w http.ResponseWriter, r *http.Request) {
 	notificationType := pr.Message.Attributes["notificationType"]
 	resourceName := pr.Message.Attributes["resourceName"]
 
-	fmt.Fprintf(w, "Received Msg ID: %s at timestamp: %s\r\n", pr.Message.MessageId, time.Now())
+	fmt.Fprintf(w, "Received Msg ID: %s at timestamp Z: %s\r\n", pr.Message.MessageId, time.Now())
 	fmt.Fprintf(w, "Subscription: %s\r\n", html.EscapeString(pr.Subscription))
 	fmt.Fprintf(w, "ResourceName: %s\r\n", html.EscapeString(resourceName))
 	fmt.Fprintf(w, "NotificationType: %s\r\n", html.EscapeString(notificationType))
