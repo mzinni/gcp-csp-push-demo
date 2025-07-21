@@ -56,7 +56,7 @@ func TestCreateFromPushMessageGETFails(t *testing.T) {
 	a := &app{pubsubVerificationToken: "testTokenNotNeededYet"}
 
 	reader := strings.NewReader(`{"name": "ThisContentShouldntMatter"}`)
-	req := httptest.NewRequest("GET", "/", reader)
+	req := httptest.NewRequest("GET", "/pubsub", reader)
 	resp := httptest.NewRecorder()
 	a.createFromPushRequestHandler(resp, req)
 
