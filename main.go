@@ -24,17 +24,38 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	support "cloud.google.com/go/support/apiv2"
+	"github.com/google/uuid"
 	"google.golang.org/api/pubsub/v1"
 	//supportpb "cloud.google.com/go/support/apiv2/supportpb"
 )
 
+type app struct {
+	// pubsubVerificationToken is a shared secret between the the publisher of
+	// the message and this application.
+	pubsubVerificationToken string
+
+	// Messages received by this instance.
+	messagesMu     sync.Mutex
+	pubSubMessages []pushRequest
+
+	// defaultHTTPClient aliases http.DefaultClient for testing
+	defaultHTTPClient *http.Client
+}
+
 func main() {
 	log.Print("starting server...")
-	http.HandleFunc("/", helloWorldHandler)
-	http.HandleFunc("/pubsub", createFromPushRequestHandler)
+
+	a := &app{
+		defaultHTTPClient:       http.DefaultClient,
+		pubsubVerificationToken: os.Getenv("PUBSUB_VERIFICATION_TOKEN"),
+	}
+
+	http.HandleFunc("/", a.helloWorldHandler)
+	http.HandleFunc("/pubsub", a.createFromPushRequestHandler)
 	//http.HandleFunc("/listPushMessages", listPushMessagesHandler)
 	//http.HandleFunc("/listCustomMessages", listCustomMessagesHandler)
 
@@ -52,7 +73,7 @@ func main() {
 	}
 }
 
-func helloWorldHandler(w http.ResponseWriter, r *http.Request) {
+func (a *app) helloWorldHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var d struct {
@@ -72,20 +93,21 @@ func helloWorldHandler(w http.ResponseWriter, r *http.Request) {
 
 // pushRequest represents the payload of a Pub/Sub push message.
 type pushRequest struct {
+	RecvTime time.Time `json:"receiveTime"`
+	Uuid     uuid.UUID `json:"uuid"`
+
 	Message      pubsub.PubsubMessage `json:"message"`
 	Subscription string               `json:"subscription"`
 }
 
 // createFromPushRequestHandler is an HTTP Cloud Function with a request parameter.
-func createFromPushRequestHandler(w http.ResponseWriter, r *http.Request) {
+func (a *app) createFromPushRequestHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	c, err := support.NewCaseClient(ctx)
-	if err != nil {
-		fmt.Fprintf(w, "Failed to create client: %v", err)
+	if r.Method != "POST" {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
-	defer c.Close()
 
 	var pr pushRequest
 	if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
@@ -93,11 +115,23 @@ func createFromPushRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	pr.Uuid = uuid.New()
+	pr.RecvTime = time.Now()
+
 	notificationType := pr.Message.Attributes["notificationType"]
 	resourceName := pr.Message.Attributes["resourceName"]
 
-	fmt.Fprintf(w, "Received Msg ID: %s at timestamp Z: %s\r\n", pr.Message.MessageId, time.Now())
+	fmt.Fprintf(w, "Received Msg ID: %s at timestamp: %s\r\n", pr.Uuid, pr.RecvTime)
 	fmt.Fprintf(w, "Subscription: %s\r\n", html.EscapeString(pr.Subscription))
 	fmt.Fprintf(w, "ResourceName: %s\r\n", html.EscapeString(resourceName))
 	fmt.Fprintf(w, "NotificationType: %s\r\n", html.EscapeString(notificationType))
+
+	a.pubSubMessages = append(a.pubSubMessages, pr)
+
+	c, err := support.NewCaseClient(ctx)
+	if err != nil {
+		fmt.Fprintf(w, "Failed to create client: %v", err)
+		return
+	}
+	defer c.Close()
 }
