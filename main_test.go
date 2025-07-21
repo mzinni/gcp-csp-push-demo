@@ -20,7 +20,7 @@ import (
 	"testing"
 )
 
-func TestHandler(t *testing.T) {
+func TestHelloWorldHandler(t *testing.T) {
 	tests := []struct {
 		label string
 		want  string
@@ -39,13 +39,57 @@ func TestHandler(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		a := &app{pubsubVerificationToken: "testTokenNotNeededYet"}
+
 		reader := strings.NewReader(`{"name": "` + test.name + `"}`)
 		req := httptest.NewRequest("GET", "/", reader)
 		rr := httptest.NewRecorder()
-		handler(rr, req)
+		a.helloWorldHandler(rr, req)
 
 		if got := rr.Body.String(); got != test.want {
 			t.Errorf("%s: got %q, want %q", test.label, got, test.want)
 		}
 	}
 }
+
+func TestCreateFromPushMessageGETFails(t *testing.T) {
+	a := &app{pubsubVerificationToken: "testTokenNotNeededYet"}
+
+	reader := strings.NewReader(`{"name": "ThisContentShouldntMatter"}`)
+	req := httptest.NewRequest("GET", "/pubsub", reader)
+	resp := httptest.NewRecorder()
+	a.createFromPushRequestHandler(resp, req)
+
+	want := 405
+	if got := resp.Code; got != want {
+		t.Errorf("got %d, want %d", got, want)
+	}
+}
+
+// func TestCreateFromPushMessage(t *testing.T) {
+// 	tests := []struct {
+// 		label   string
+// 		want    string
+// 		wantLen uint
+// 		name    string
+// 	}{
+// 		{
+// 			label: "default",
+// 			want:  "Hello World!\n",
+// 			name:  "",
+// 		},
+// 	}
+//
+// 	for _, test := range tests {
+// 		a := &app{pubsubVerificationToken: "testTokenNotNeededYet"}
+//
+// 		reader := strings.NewReader(`{"name": "` + test.name + `"}`)
+// 		req := httptest.NewRequest("POST", "/", reader)
+// 		rr := httptest.NewRecorder()
+// 		a.helloWorldHandler(rr, req)
+//
+// 		if got := rr.Body.String(); got != test.want {
+// 			t.Errorf("%s: got %q, want %q", test.label, got, test.want)
+// 		}
+// 	}
+// }
