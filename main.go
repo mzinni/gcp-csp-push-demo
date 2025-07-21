@@ -93,8 +93,8 @@ func (a *app) helloWorldHandler(w http.ResponseWriter, r *http.Request) {
 
 // pushRequest represents the payload of a Pub/Sub push message.
 type pushRequest struct {
-	RecvTime time.Time `json:"receiveTime"`
-	Uuid     uuid.UUID `json:"uuid"`
+	RecvTime time.Time
+	Uuid     uuid.UUID
 
 	Message      pubsub.PubsubMessage `json:"message"`
 	Subscription string               `json:"subscription"`
