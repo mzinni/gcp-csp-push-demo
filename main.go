@@ -56,7 +56,7 @@ func main() {
 
 	http.HandleFunc("/", a.helloWorldHandler)
 	http.HandleFunc("/pubsub", a.createFromPushRequestHandler)
-	//http.HandleFunc("/listPushMessages", listPushMessagesHandler)
+	http.HandleFunc("/listPushMessages", a.listPushMessagesHandler)
 	//http.HandleFunc("/listCustomMessages", listCustomMessagesHandler)
 
 	// Determine port for HTTP service.
@@ -127,8 +127,9 @@ func (a *app) createFromPushRequestHandler(w http.ResponseWriter, r *http.Reques
 	fmt.Fprintf(w, "NotificationType: %s\r\n", html.EscapeString(notificationType))
 
 	a.messagesMu.Lock()
+	defer a.messagesMu.Unlock()
+
 	a.pubSubMessages = append(a.pubSubMessages, pr)
-	a.messagesMu.Unlock()
 
 	c, err := support.NewCaseClient(ctx)
 	if err != nil {
@@ -136,4 +137,14 @@ func (a *app) createFromPushRequestHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	defer c.Close()
+}
+
+func (a *app) listPushMessagesHandler(w http.ResponseWriter, r *http.Request) {
+	a.messagesMu.Lock()
+	defer a.messagesMu.Unlock()
+
+	fmt.Fprintln(w, "Recv'd Push Messages:")
+	for _, v := range a.pubSubMessages {
+		fmt.Fprintf(w, "Message: %v\n", v)
+	}
 }
