@@ -126,7 +126,9 @@ func (a *app) createFromPushRequestHandler(w http.ResponseWriter, r *http.Reques
 	fmt.Fprintf(w, "ResourceName: %s\r\n", html.EscapeString(resourceName))
 	fmt.Fprintf(w, "NotificationType: %s\r\n", html.EscapeString(notificationType))
 
+	a.messagesMu.Lock()
 	a.pubSubMessages = append(a.pubSubMessages, pr)
+	a.messagesMu.Unlock()
 
 	c, err := support.NewCaseClient(ctx)
 	if err != nil {
