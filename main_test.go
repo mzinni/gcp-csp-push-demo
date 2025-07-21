@@ -20,7 +20,7 @@ import (
 	"testing"
 )
 
-func TestHandler(t *testing.T) {
+func TestHelloWorldHandler(t *testing.T) {
 	tests := []struct {
 		label string
 		want  string
@@ -42,7 +42,7 @@ func TestHandler(t *testing.T) {
 		reader := strings.NewReader(`{"name": "` + test.name + `"}`)
 		req := httptest.NewRequest("GET", "/", reader)
 		rr := httptest.NewRecorder()
-		handler(rr, req)
+		helloWorldHandler(rr, req)
 
 		if got := rr.Body.String(); got != test.want {
 			t.Errorf("%s: got %q, want %q", test.label, got, test.want)

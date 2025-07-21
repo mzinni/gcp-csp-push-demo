@@ -33,10 +33,10 @@ import (
 
 func main() {
 	log.Print("starting server...")
-	http.HandleFunc("/", handler)
-	http.HandleFunc("/pubsub", handlePubSub)
-	//http.HandleFunc("/listMessages", handleListMessages)
-	//http.HandleFunc("/listServiceNowMessages", handleListServiceNowMessages)
+	http.HandleFunc("/", helloWorldHandler)
+	http.HandleFunc("/pubsub", createFromPushRequestHandler)
+	//http.HandleFunc("/listPushMessages", listPushMessagesHandler)
+	//http.HandleFunc("/listCustomMessages", listCustomMessagesHandler)
 
 	// Determine port for HTTP service.
 	port := os.Getenv("PORT")
@@ -52,7 +52,7 @@ func main() {
 	}
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func helloWorldHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var d struct {
@@ -76,8 +76,8 @@ type pushRequest struct {
 	Subscription string               `json:"subscription"`
 }
 
-// handlePubSub is an HTTP Cloud Function with a request parameter.
-func handlePubSub(w http.ResponseWriter, r *http.Request) {
+// createFromPushRequestHandler is an HTTP Cloud Function with a request parameter.
+func createFromPushRequestHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	c, err := support.NewCaseClient(ctx)
