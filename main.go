@@ -118,13 +118,13 @@ func (a *app) createFromPushRequestHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	pr.Uuid = uuid.New()
+	pr.UUID = uuid.New()
 	pr.RecvTime = time.Now()
 
 	notificationType := pr.Message.Attributes["notificationType"]
 	resourceName := pr.Message.Attributes["resourceName"]
 
-	fmt.Fprintf(w, "Received Msg ID: %s at timestamp: %s\r\n", pr.Uuid, pr.RecvTime)
+	fmt.Fprintf(w, "Received Msg ID: %s at timestamp: %s\r\n", pr.UUID, pr.RecvTime)
 	fmt.Fprintf(w, "Subscription: %s\r\n", html.EscapeString(pr.Subscription))
 	fmt.Fprintf(w, "ResourceName: %s\r\n", html.EscapeString(resourceName))
 	fmt.Fprintf(w, "NotificationType: %s\r\n", html.EscapeString(notificationType))
