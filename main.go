@@ -57,6 +57,7 @@ func main() {
 	http.HandleFunc("/", a.helloWorldHandler)
 	http.HandleFunc("/pubsub", a.createFromPushRequestHandler)
 	http.HandleFunc("/listPushMessages", a.listPushMessagesHandler)
+	http.HandleFunc("/clear", a.clearMessagesHandler)
 	//http.HandleFunc("/listCustomMessages", listCustomMessagesHandler)
 
 	// Determine port for HTTP service.
@@ -105,7 +106,7 @@ type pushRequest struct {
 func (a *app) createFromPushRequestHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	if r.Method != "POST" {
+	if r.Method != http.MethodPost {
 		log.Printf("Unsupported method: %s", r.Method)
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
@@ -150,4 +151,18 @@ func (a *app) listPushMessagesHandler(w http.ResponseWriter, r *http.Request) {
 	for _, v := range a.pubSubMessages {
 		fmt.Fprintf(w, "Message: %v\n", v)
 	}
+}
+
+func (a *app) clearMessagesHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		log.Printf("Unsupported method: %s", r.Method)
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	a.messagesMu.Lock()
+	defer a.messagesMu.Unlock()
+
+	a.pubSubMessages = nil
+	fmt.Fprint(w, "OK")
 }

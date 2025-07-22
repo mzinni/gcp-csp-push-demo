@@ -86,6 +86,30 @@ func TestCreateFromPushMessageIncorrectBodyFails(t *testing.T) {
 	}
 }
 
+func TestClearMessages(t *testing.T) {
+	a := &app{pubsubVerificationToken: "testTokenNotNeededYet"}
+
+	a.pubSubMessages = append(a.pubSubMessages, pushRequest{}, pushRequest{})
+	if got := len(a.pubSubMessages); got != 2 {
+		t.Fatalf("got len=%d, want %d", got, 2)
+	}
+
+	reader := strings.NewReader(`{"name": "ThisContentShouldntMatter"}`)
+	req := httptest.NewRequest("POST", "/clear", reader)
+	resp := httptest.NewRecorder()
+	a.clearMessagesHandler(resp, req)
+
+	want := http.StatusOK
+	if got := resp.Code; got != want {
+		t.Errorf("got code=%d, want %d", got, want)
+	}
+
+	want = 0
+	if got := len(a.pubSubMessages); got != want {
+		t.Errorf("got len=%d, want %d", got, want)
+	}
+}
+
 // func TestCreateFromPushMessage(t *testing.T) {
 // 	tests := []struct {
 // 		label   string
