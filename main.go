@@ -113,7 +113,7 @@ func (a *app) createFromPushRequestHandler(w http.ResponseWriter, r *http.Reques
 
 	var pr pushRequest
 	if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
-		log.Printf("PushRequest message failed to decode. r.Body: %v", r.Body)
+		log.Printf("failed to decode push request: %v", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
