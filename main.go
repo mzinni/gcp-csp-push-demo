@@ -88,6 +88,7 @@ func (a *app) helloWorldHandler(w http.ResponseWriter, r *http.Request) {
 	if name == "" {
 		name = "World"
 	}
+	log.Printf("resp: Hello %s", name)
 	fmt.Fprintf(w, "Hello %s!\n", name)
 }
 
@@ -105,13 +106,15 @@ func (a *app) createFromPushRequestHandler(w http.ResponseWriter, r *http.Reques
 	ctx := r.Context()
 
 	if r.Method != "POST" {
+		log.Printf("Unsupported method: %s", r.Method)
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
 
 	var pr pushRequest
 	if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
-		fmt.Fprint(w, "PubSub message failed to decode!!\r\n")
+		log.Printf("PushRequest message failed to decode. r.Body: %v", r.Body)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
