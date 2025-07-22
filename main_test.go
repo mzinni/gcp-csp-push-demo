@@ -15,6 +15,7 @@
 package main
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -60,7 +61,26 @@ func TestCreateFromPushMessageGETFails(t *testing.T) {
 	resp := httptest.NewRecorder()
 	a.createFromPushRequestHandler(resp, req)
 
-	want := 405
+	want := http.StatusMethodNotAllowed
+	if got := resp.Code; got != want {
+		t.Errorf("got code=%d, want %d", got, want)
+	}
+
+	want = 0
+	if got := len(a.pubSubMessages); got != want {
+		t.Errorf("got len=%d, want %d", got, want)
+	}
+}
+
+func TestCreateFromPushMessageIncorrectBodyFails(t *testing.T) {
+	a := &app{pubsubVerificationToken: "testTokenNotNeededYet"}
+
+	reader := strings.NewReader(`ThisShouldntPassParsing`)
+	req := httptest.NewRequest("POST", "/pubsub", reader)
+	resp := httptest.NewRecorder()
+	a.createFromPushRequestHandler(resp, req)
+
+	want := http.StatusBadRequest
 	if got := resp.Code; got != want {
 		t.Errorf("got %d, want %d", got, want)
 	}

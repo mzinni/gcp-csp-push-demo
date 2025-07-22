@@ -56,7 +56,7 @@ func main() {
 
 	http.HandleFunc("/", a.helloWorldHandler)
 	http.HandleFunc("/pubsub", a.createFromPushRequestHandler)
-	//http.HandleFunc("/listPushMessages", listPushMessagesHandler)
+	http.HandleFunc("/listPushMessages", a.listPushMessagesHandler)
 	//http.HandleFunc("/listCustomMessages", listCustomMessagesHandler)
 
 	// Determine port for HTTP service.
@@ -88,13 +88,14 @@ func (a *app) helloWorldHandler(w http.ResponseWriter, r *http.Request) {
 	if name == "" {
 		name = "World"
 	}
+	log.Printf("resp: Hello %s", name)
 	fmt.Fprintf(w, "Hello %s!\n", name)
 }
 
 // pushRequest represents the payload of a Pub/Sub push message.
 type pushRequest struct {
 	RecvTime time.Time
-	Uuid     uuid.UUID
+	UUID     uuid.UUID
 
 	Message      pubsub.PubsubMessage `json:"message"`
 	Subscription string               `json:"subscription"`
@@ -105,30 +106,33 @@ func (a *app) createFromPushRequestHandler(w http.ResponseWriter, r *http.Reques
 	ctx := r.Context()
 
 	if r.Method != "POST" {
+		log.Printf("Unsupported method: %s", r.Method)
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
 
 	var pr pushRequest
 	if err := json.NewDecoder(r.Body).Decode(&pr); err != nil {
-		fmt.Fprint(w, "PubSub message failed to decode!!\r\n")
+		log.Printf("failed to decode push request: %v", err)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	pr.Uuid = uuid.New()
+	pr.UUID = uuid.New()
 	pr.RecvTime = time.Now()
 
 	notificationType := pr.Message.Attributes["notificationType"]
 	resourceName := pr.Message.Attributes["resourceName"]
 
-	fmt.Fprintf(w, "Received Msg ID: %s at timestamp: %s\r\n", pr.Uuid, pr.RecvTime)
+	fmt.Fprintf(w, "Received Msg ID: %s at timestamp: %s\r\n", pr.UUID, pr.RecvTime)
 	fmt.Fprintf(w, "Subscription: %s\r\n", html.EscapeString(pr.Subscription))
 	fmt.Fprintf(w, "ResourceName: %s\r\n", html.EscapeString(resourceName))
 	fmt.Fprintf(w, "NotificationType: %s\r\n", html.EscapeString(notificationType))
 
 	a.messagesMu.Lock()
+	defer a.messagesMu.Unlock()
+
 	a.pubSubMessages = append(a.pubSubMessages, pr)
-	a.messagesMu.Unlock()
 
 	c, err := support.NewCaseClient(ctx)
 	if err != nil {
@@ -136,4 +140,14 @@ func (a *app) createFromPushRequestHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	defer c.Close()
+}
+
+func (a *app) listPushMessagesHandler(w http.ResponseWriter, r *http.Request) {
+	a.messagesMu.Lock()
+	defer a.messagesMu.Unlock()
+
+	fmt.Fprintln(w, "Recv'd Push Messages:")
+	for _, v := range a.pubSubMessages {
+		fmt.Fprintf(w, "Message: %v\n", v)
+	}
 }
