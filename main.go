@@ -23,6 +23,7 @@ import (
 	"html"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"sync"
 	"time"
@@ -150,4 +151,13 @@ func (a *app) listPushMessagesHandler(w http.ResponseWriter, r *http.Request) {
 	for _, v := range a.pubSubMessages {
 		fmt.Fprintf(w, "Message: %v\n", v)
 	}
+}
+
+func (a *app) clearDemoMessagesHandler(resp *httptest.ResponseRecorder, req *http.Request) {
+	a.messagesMu.Lock()
+	defer a.messagesMu.Unlock()
+
+	a.pubSubMessages = nil
+	_ = req
+	resp.WriteHeader(http.StatusOK)
 }
