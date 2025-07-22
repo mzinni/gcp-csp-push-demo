@@ -106,7 +106,7 @@ func TestClearMessages(t *testing.T) {
 
 	want = 0
 	if got := len(a.pubSubMessages); got != want {
-		t.Errorf("got len=%d, , want %d", got, want)
+		t.Errorf("got len=%d, want %d", got, want)
 	}
 }
 
