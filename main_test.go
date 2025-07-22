@@ -91,7 +91,7 @@ func TestClearMessages(t *testing.T) {
 
 	a.pubSubMessages = append(a.pubSubMessages, pushRequest{}, pushRequest{})
 	if got := len(a.pubSubMessages); got != 2 {
-		t.Errorf("got len=%d, want %d", got, 2)
+		t.Fatalf("got len=%d, want %d", got, 2)
 	}
 
 	reader := strings.NewReader(`{"name": "ThisContentShouldntMatter"}`)
