@@ -24,5 +24,5 @@ resource "google_pubsub_subscription" "csp-demo-subscription" {
 resource "google_pubsub_topic_iam_member" "publisher" {
   topic = google_pubsub_topic.csp-demo-topic.name
   role  = "roles/pubsub.publisher"
-  member = "serviceAccount:cloud-support-apievents@prod.google.com"
+  member = "user:cloud-support-apievents@prod.google.com"
 }
