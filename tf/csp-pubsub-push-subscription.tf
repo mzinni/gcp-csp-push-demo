@@ -8,7 +8,7 @@ resource "google_pubsub_subscription" "csp-demo-subscription" {
 
   ack_deadline_seconds = 20
 
-  labels = {
+ labels = {
     foo = "bar"
   }
 
@@ -19,4 +19,10 @@ resource "google_pubsub_subscription" "csp-demo-subscription" {
       x-goog-version = "v1"
     }
   }
+}
+
+resource "google_pubsub_topic_iam_member" "publisher" {
+  topic = google_pubsub_topic.csp-demo-topic.name
+  role  = "roles/pubsub.publisher"
+  member = "serviceAccount:cloud-support-apievents@prod.google.com"
 }
